@@ -1,0 +1,19 @@
+# Environment variables & Secrets
+.env
+.env.*
+*.env
+.streamlit/secrets.toml
+
+# Python cache & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
