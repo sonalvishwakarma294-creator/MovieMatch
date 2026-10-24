@@ -1,149 +1,186 @@
-# MovieMatch
+# 🎬 MovieMatch
 
-MovieMatch is a content-based movie recommendation system that helps users discover movies similar to their favorites using NLP, cosine similarity, and movie metadata. The application combines movie descriptions, genres, cast, director, and ratings to generate personalized recommendations in an interactive Streamlit web app.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.9%2B-3776AB?style=for-the-badge&logo=python" alt="Python 3.9+" />
+  <img src="https://img.shields.io/badge/Streamlit-FF4B4B?style=for-the-badge&logo=streamlit" alt="Streamlit" />
+  <img src="https://img.shields.io/badge/Scikit--Learn-F7931E?style=for-the-badge&logo=scikitlearn" alt="Scikit-Learn" />
+  <img src="https://img.shields.io/badge/TMDb-01B4E4?style=for-the-badge&logo=themoviedatabase" alt="TMDb" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License" />
+</p>
 
-## Demo
+<p align="center">
+  <strong>Smart, personalized movie recommendations powered by content-based filtering and similarity matching.</strong>
+</p>
 
-A live version of the app can be launched locally with Streamlit, and the project is also prepared for deployment to services like Render or Heroku using the included Procfile and setup script.
+A polished movie recommendation app that suggests titles similar to the one you select, using metadata like genres, overview, cast, and director. Built with Python, Streamlit, and scikit-learn for a smooth interactive experience.
 
-## Features
+## ✨ Highlights
 
-- Personalized movie recommendations based on a selected movie
-- Content-based filtering using textual metadata and similarity scoring
-- Genre filtering and minimum rating controls
-- Dynamic recommendation cards with posters and trailer links
-- Interactive Streamlit UI for easy browsing
-- Support for TMDb and OMDb poster retrieval
-- Deployed app-ready configuration for hosting platforms
+- Personalized movie suggestions based on the selected movie
+- Content-based recommendation engine using movie metadata and similarity scores
+- Genre and rating filters for better discovery
+- Poster fetching with TMDb and OMDb fallback
+- Modern Streamlit UI with a cinematic dashboard design
+- Ready for local use and deployment on cloud hosting platforms
 
-## Tech Stack
+## 🎥 Demo
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/sonalvishwakarma294-creator/MovieMatch/main/assets/demo-preview.png" alt="MovieMatch preview" width="900" />
+</p>
+
+> Screenshot preview can be replaced with a local asset in `assets/demo-preview.png` for a more branded experience.
+
+## 🧠 How It Works
+
+The recommendation engine follows a content-based approach:
+
+1. It loads movie metadata such as title, overview, genres, cast, and director.
+2. Textual features are transformed into a vector representation.
+3. Cosine similarity is computed across the movie catalog.
+4. When a user chooses a movie, the system ranks the most similar titles and returns recommendations.
+
+## 🛠️ Tech Stack
 
 - Python
 - Streamlit
 - Pandas
 - NumPy
-- scikit-learn (used in the recommendation logic in the notebook pipeline)
+- scikit-learn
 - Requests
-- Python-dotenv
-- TMDb API / OMDb API
+- python-dotenv
+- TMDb API
+- OMDb API
 
-## Project Structure
+## 📁 Project Structure
 
 ```text
 MovieMatch/
-├── app.py                     # Streamlit web application
-├── movie-recommender-system.ipynb  # Notebook used for building the recommendation model
-├── movies.pkl                # Movie metadata dataset used by the app
-├── similarity.pkl            # Cosine similarity matrix
-├── movie_dict.pkl            # Additional movie dictionary data
-├── movies_dict.pkl           # Alternative movie dictionary structure
-├── requirements.txt          # Python dependencies
-├── .env.example              # Sample environment file
-├── Procfile                  # Deployment config for web servers
-├── setup.sh                 # Streamlit setup script for deployment
-├── README.md                # Project documentation
-├── .gitignore               # Git ignore rules
-└── .streamlit/              # Generated configuration (created at runtime)
+├── app.py                          # Streamlit web application
+├── movie-recommender-system.ipynb  # Notebook for model and recommendation pipeline
+├── movies.pkl                     # Movie metadata dataset
+├── similarity.pkl                 # Cosine similarity matrix
+├── movie_dict.pkl                 # Additional movie metadata dictionary
+├── movies_dict.pkl                # Alternative movie dictionary structure
+├── requirements.txt               # Python dependencies
+├── .env.example                   # Sample environment variables
+├── Procfile                       # Deployment config
+├── setup.sh                      # Deployment setup script
+├── README.md                     # Project documentation
+├── .gitignore                    # Git ignore rules
+├── assets/                       # Optional screenshots and project assets
+└── .streamlit/                   # Streamlit configuration
 ```
 
-## How It Works
-
-The recommendation engine uses a content-based approach:
-
-1. Movie metadata such as title, overview, genres, cast, and director are processed.
-2. Textual features are transformed into a vector representation.
-3. Cosine similarity is computed between movies.
-4. When a user selects a movie, the app ranks the most similar titles and displays them as recommendations.
-
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
 - Python 3.9+
 - pip
-- A TMDb API key (optional for image fetching but recommended)
-- An OMDb API key (optional fallback for posters)
+- TMDb API key (recommended for poster fetching)
+- OMDb API key (optional fallback)
 
-### Clone the Repository
+### Clone the repository
 
 ```bash
 git clone https://github.com/sonalvishwakarma294-creator/MovieMatch.git
 cd MovieMatch
 ```
 
-### Install Dependencies
+### Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Configure Environment Variables
+### Configure environment variables
 
-Create a `.env` file in the project root based on `.env.example`:
+Create a `.env` file in the project root using the sample file:
+
+```bash
+cp .env.example .env
+```
+
+Example:
 
 ```env
 TMDB_API_KEY=your_tmdb_api_key_here
 OMDB_API_KEY=your_omdb_api_key_here
 ```
 
-You can copy the sample file:
-
-```bash
-cp .env.example .env
-```
-
-### Run the App
+### Run the app
 
 ```bash
 streamlit run app.py
 ```
 
-The app will open in your default browser, usually at:
+Open the app in your browser at:
 
 ```text
 http://localhost:8501
 ```
 
-## Deployment
+## 🎯 Features
 
-This project includes deployment support for web hosting platforms:
+- Smart recommendation engine based on movie similarity
+- Similarity scoring and match percentage visualization
+- Genre filtering to narrow recommendations
+- Minimum rating filters
+- Movie detail cards with cast, director, and genres
+- Trailer search links for discovered movies
+- Clean, user-friendly layout for browsing recommendations
 
-- `Procfile` for app startup commands
-- `setup.sh` to configure Streamlit server settings
+## 🌐 Deployment
 
-Example deployment flow for a Python hosting service:
+This project is prepared for deployment on hosting services like Render or Heroku.
+
+Included deployment files:
+
+- `Procfile`
+- `setup.sh`
+
+Example startup command:
 
 ```bash
-pip install -r requirements.txt
 streamlit run app.py --server.port $PORT
 ```
 
-## Usage
+## 📊 Project Status
 
-1. Select a movie from the dropdown.
-2. Adjust the genre filter, number of recommendations, and minimum rating.
-3. Click "Get Recommendations" to view similar movies.
-4. Explore movie details, genre tags, and trailer links.
+- Recommendation engine: Active
+- UI: Interactive and polished
+- Deployment support: Included
+- Data integration: TMDb/OMDb metadata support
 
-## Dataset Notes
+## 🤝 Contributing
 
-The application relies on movie metadata and similarity data generated from a movie recommendation dataset. Poster images are fetched from TMDb and OMDb when available.
+Contributions are welcome. If you want to improve the app, add new recommendation logic, or improve the UI:
 
-## License
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Open a pull request
 
-This project is open for personal and educational use. If you plan to use it commercially, confirm the licensing terms for the data sources and APIs you integrate with.
+## 📜 License
 
-## Acknowledgements
+This project is open for personal and educational use. Please review the licensing requirements for external data sources and APIs before commercial use.
 
-- TMDb API for movie metadata and poster images
-- OMDb API for poster fallback support
-- Streamlit for the interactive front-end
-- The open-source data and recommendation community
+## 🙌 Acknowledgements
 
-## Author
+- TMDb API for movie metadata and artwork
+- OMDb API for poster fallback
+- Streamlit for interactive app development
+- scikit-learn for similarity computation
+
+## 👤 Author
 
 Sonal Vishwakarma
 
-## Contact
+---
 
-If you'd like to contribute, report an issue, or discuss improvements, feel free to open an issue or reach out through the repository.
+<p align="center">
+  <a href="https://github.com/sonalvishwakarma294-creator/MovieMatch">
+    <img src="https://img.shields.io/badge/View%20on%20GitHub-181717?style=for-the-badge&logo=github" alt="View on GitHub" />
+  </a>
+</p>
