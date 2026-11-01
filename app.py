@@ -6,23 +6,38 @@ import requests
 import ast
 import urllib.parse
 import os
+from pathlib import Path
 from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent
 
 # ---------------------------------------------------------
 # Environment Variables (API keys & secrets live in .env)
 # ---------------------------------------------------------
 load_dotenv()
 
+FALLBACK_TMDB_KEY = "8265bd1679663a7ea12ac168da84d2e8"
+FALLBACK_OMDB_KEY = "trilogy"
+
+def _clean_key(val, default=""):
+    if not val or not isinstance(val, str):
+        return default
+    v = val.strip()
+    if not v or "your_" in v or "_here" in v:
+        return default
+    return v
+
 try:
     if hasattr(st, "secrets"):
-        DEFAULT_TMDB_API_KEY = st.secrets.get("TMDB_API_KEY", os.getenv("TMDB_API_KEY", ""))
-        DEFAULT_OMDB_API_KEY = st.secrets.get("OMDB_API_KEY", os.getenv("OMDB_API_KEY", "trilogy"))
+        DEFAULT_TMDB_API_KEY = _clean_key(st.secrets.get("TMDB_API_KEY", os.getenv("TMDB_API_KEY", "")), FALLBACK_TMDB_KEY)
+        DEFAULT_OMDB_API_KEY = _clean_key(st.secrets.get("OMDB_API_KEY", os.getenv("OMDB_API_KEY", "")), FALLBACK_OMDB_KEY)
     else:
-        DEFAULT_TMDB_API_KEY = os.getenv("TMDB_API_KEY", "")
-        DEFAULT_OMDB_API_KEY = os.getenv("OMDB_API_KEY", "trilogy")
+        DEFAULT_TMDB_API_KEY = _clean_key(os.getenv("TMDB_API_KEY", ""), FALLBACK_TMDB_KEY)
+        DEFAULT_OMDB_API_KEY = _clean_key(os.getenv("OMDB_API_KEY", ""), FALLBACK_OMDB_KEY)
 except Exception:
-    DEFAULT_TMDB_API_KEY = os.getenv("TMDB_API_KEY", "")
-    DEFAULT_OMDB_API_KEY = os.getenv("OMDB_API_KEY", "trilogy")
+    DEFAULT_TMDB_API_KEY = _clean_key(os.getenv("TMDB_API_KEY", ""), FALLBACK_TMDB_KEY)
+    DEFAULT_OMDB_API_KEY = _clean_key(os.getenv("OMDB_API_KEY", ""), FALLBACK_OMDB_KEY)
+
 
 # ---------------------------------------------------------
 # Page Configuration
@@ -195,6 +210,22 @@ st.markdown("""
         transform: scale(1.04);
     }
 
+    /* Streamlit Native Image Polishing */
+    div[data-testid="stImage"] img {
+        border-radius: 12px !important;
+        aspect-ratio: 2/3 !important;
+        object-fit: cover !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        transition: all 0.35s ease !important;
+    }
+
+    div[data-testid="stImage"] img:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 14px 30px rgba(0, 229, 255, 0.3) !important;
+        border-color: rgba(0, 229, 255, 0.5) !important;
+    }
+
     .poster-fallback {
         display: flex;
         flex-direction: column;
@@ -262,17 +293,20 @@ st.markdown("""
 # ---------------------------------------------------------
 @st.cache_data(show_spinner=False)
 def load_and_prepare_data():
-    # Load base processed dataset & similarity
-    with open('movies.pkl', 'rb') as f:
+    # Load base processed dataset & similarity from the same directory as this app file
+    movies_path = BASE_DIR / 'movies.pkl'
+    similarity_path = BASE_DIR / 'similarity.pkl'
+
+    with open(movies_path, 'rb') as f:
         movies_df = pickle.load(f)
 
-    with open('similarity.pkl', 'rb') as f:
+    with open(similarity_path, 'rb') as f:
         similarity_matrix = pickle.load(f)
 
     # Load rich metadata from TMDB raw datasets
     try:
-        raw_movies = pd.read_csv('tmdb_5000_movies.csv')
-        raw_credits = pd.read_csv('tmdb_5000_credits.csv')
+        raw_movies = pd.read_csv(BASE_DIR / 'tmdb_5000_movies.csv')
+        raw_credits = pd.read_csv(BASE_DIR / 'tmdb_5000_credits.csv')
 
         raw_movies = raw_movies.rename(columns={'id': 'movie_id'})
         
@@ -352,33 +386,35 @@ with st.spinner("Initializing MovieMatch Recommendation Engine..."):
 # ---------------------------------------------------------
 @st.cache_data(show_spinner=False, ttl=86400)
 def fetch_poster(movie_id, title="", year="", tmdb_api_key=""):
-    api_key = tmdb_api_key.strip() if tmdb_api_key else DEFAULT_TMDB_API_KEY
+    api_key = _clean_key(tmdb_api_key, DEFAULT_TMDB_API_KEY)
+    if not api_key:
+        api_key = FALLBACK_TMDB_KEY
 
     # 1. Official TMDB Poster Lookup
-    if api_key:
-        try:
-            url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}&language=en-US"
-            resp = requests.get(url, timeout=3.0)
-            if resp.status_code == 200:
-                data = resp.json()
-                poster_path = data.get('poster_path')
-                if poster_path:
-                    return f"https://image.tmdb.org/t/p/w500{poster_path}"
-        except Exception:
-            pass
+    try:
+        url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}&language=en-US"
+        resp = requests.get(url, timeout=4.0)
+        if resp.status_code == 200:
+            data = resp.json()
+            poster_path = data.get('poster_path')
+            if poster_path:
+                return f"https://image.tmdb.org/t/p/w500{poster_path}"
+    except Exception:
+        pass
 
     # 2. Secondary IMDb / OMDb High-Definition Poster Fetcher
     if title:
         try:
             clean_title = title.split(' (')[0].strip()
+            omdb_key = _clean_key(DEFAULT_OMDB_API_KEY, FALLBACK_OMDB_KEY)
             params = {
                 't': clean_title,
-                'apikey': DEFAULT_OMDB_API_KEY
+                'apikey': omdb_key
             }
             if year and year != 'N/A':
                 params['y'] = year
             
-            resp = requests.get("https://www.omdbapi.com/", params=params, timeout=2.5)
+            resp = requests.get("https://www.omdbapi.com/", params=params, timeout=3.0)
             if resp.status_code == 200:
                 data = resp.json()
                 poster = data.get('Poster')

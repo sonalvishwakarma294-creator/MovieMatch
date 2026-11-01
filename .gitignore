@@ -4,6 +4,11 @@
 *.env
 .streamlit/secrets.toml
 
+# Large datasets & oversized model files (>100MB exceeds GitHub limits)
+similarity.pkl
+tmdb_5000_movies.csv
+tmdb_5000_credits.csv
+
 # Python cache & build artifacts
 __pycache__/
 *.py[cod]
@@ -16,4 +21,3 @@ __pycache__/
 .idea/
 .DS_Store
 Thumbs.db
-
