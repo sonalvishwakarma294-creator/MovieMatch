@@ -323,7 +323,14 @@ def load_and_prepare_data():
                 f"Could not load similarity matrix (similarity.pkl / similarity.pkl.bz2) or compute dynamically: {e}"
             )
 
-    # Load rich metadata from TMDB raw datasets
+    # 1. First priority: Pre-compiled lightweight clean metadata (4.5 MB, includes all cast/genres/ratings)
+    clean_movies_path = BASE_DIR / 'movies_clean.pkl'
+    if clean_movies_path.exists():
+        with open(clean_movies_path, 'rb') as f:
+            merged = pickle.load(f)
+        return merged, similarity_matrix
+
+    # 2. Secondary: Load rich metadata from TMDB raw datasets if present
     try:
         raw_movies = pd.read_csv(BASE_DIR / 'tmdb_5000_movies.csv')
         raw_credits = pd.read_csv(BASE_DIR / 'tmdb_5000_credits.csv')
@@ -342,9 +349,10 @@ def load_and_prepare_data():
         # Fallback if raw csvs not found
         merged = movies_df.copy()
         merged['vote_average'] = 7.0
+        merged['vote_count'] = 1500
         merged['release_date'] = '2015-01-01'
         merged['genres'] = '[]'
-        merged['overview'] = ''
+        merged['overview'] = 'A captivating movie from the TMDB catalog.'
         merged['tagline'] = ''
         merged['runtime'] = 120
         merged['cast'] = '[]'
@@ -747,7 +755,11 @@ with tab_insights:
 
 with tab_top_rated:
     st.markdown("### 🌟 Highest Rated Classics in the TMDB 5000 Catalog")
-    top_rated_df = movies[movies['vote_count'] > 1000].sort_values(by='vote_average', ascending=False).head(5)
+    if 'vote_count' in movies.columns:
+        filtered = movies[movies['vote_count'] > 1000]
+        top_rated_df = (filtered if not filtered.empty else movies).sort_values(by='vote_average', ascending=False).head(5)
+    else:
+        top_rated_df = movies.sort_values(by='vote_average', ascending=False).head(5)
     
     top_cols = st.columns(5)
     for idx, (_, top_m) in enumerate(top_rated_df.iterrows()):
