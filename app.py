@@ -1,5 +1,6 @@
 import streamlit as st
 import pickle
+import bz2
 import pandas as pd
 import numpy as np
 import requests
@@ -296,12 +297,31 @@ def load_and_prepare_data():
     # Load base processed dataset & similarity from the same directory as this app file
     movies_path = BASE_DIR / 'movies.pkl'
     similarity_path = BASE_DIR / 'similarity.pkl'
+    similarity_bz2_path = BASE_DIR / 'similarity.pkl.bz2'
 
     with open(movies_path, 'rb') as f:
         movies_df = pickle.load(f)
 
-    with open(similarity_path, 'rb') as f:
-        similarity_matrix = pickle.load(f)
+    # Multi-tier similarity loading (uncompressed pkl -> bz2 compressed -> dynamic compute)
+    similarity_matrix = None
+    if similarity_path.exists():
+        with open(similarity_path, 'rb') as f:
+            similarity_matrix = pickle.load(f)
+    elif similarity_bz2_path.exists():
+        with bz2.BZ2File(similarity_bz2_path, 'rb') as f:
+            similarity_matrix = pickle.load(f)
+    else:
+        # Dynamic fallback: compute in ~2.5s using scikit-learn
+        try:
+            from sklearn.feature_extraction.text import CountVectorizer
+            from sklearn.metrics.pairwise import cosine_similarity
+            cv = CountVectorizer(max_features=5000, stop_words='english')
+            vectors = cv.fit_transform(movies_df['tags']).toarray()
+            similarity_matrix = cosine_similarity(vectors)
+        except Exception as e:
+            raise FileNotFoundError(
+                f"Could not load similarity matrix (similarity.pkl / similarity.pkl.bz2) or compute dynamically: {e}"
+            )
 
     # Load rich metadata from TMDB raw datasets
     try:
